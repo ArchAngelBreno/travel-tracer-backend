@@ -1,5 +1,6 @@
 package com.traveltracer.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -8,26 +9,31 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class User {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+	private Long id;
+	
+	@NotNull
 	private String name;
+	
+	@Email
+	@NotNull
 	private String email;
 
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), 
-	inverseJoinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id"))
-	private List<Group> groups;
+	@OneToMany(mappedBy="user",cascade=CascadeType.ALL,fetch=FetchType.LAZY)
+	@JsonIgnore
+	private List<UserGroup> userGroups;
 	
-	@OneToMany(mappedBy="user",cascade=CascadeType.ALL,fetch=FetchType.EAGER)
+	@OneToMany(cascade=CascadeType.ALL,fetch=FetchType.LAZY)
 	private List<Payment> payments;
 
 	public User() {
@@ -41,11 +47,11 @@ public class User {
 		this.email = email;
 	}
 
-	public long getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 
@@ -65,11 +71,26 @@ public class User {
 		this.email = email;
 	}
 
-	public List<Group> getGroups() {
-		return groups;
+	public List<UserGroup> getUserGroups() {
+		return userGroups;
 	}
 
-	public void setGroups(List<Group> groups) {
-		this.groups = groups;
+	public void setUserGroups(List<UserGroup> userGroups) {
+		this.userGroups = userGroups;
+	}
+
+	
+	
+	public void addGroup(Group group, boolean isOwner) {
+		if (userGroups == null) {
+			userGroups = new ArrayList<>();
+		}
+		
+		UserGroup userGroup = new UserGroup();
+		userGroup.setUser(this);
+		userGroup.setGroup(group);
+		userGroup.setOwner(isOwner);
+		
+		userGroups.add(userGroup);
 	}
 }
