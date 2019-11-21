@@ -11,8 +11,6 @@ public class CreateGroupRequest {
 	
 	private Group group;
 	
-	private boolean owner;
-
 	public long getUserId() {
 		return userId;
 	}
@@ -29,14 +27,5 @@ public class CreateGroupRequest {
 		this.group = group;
 	}
 
-	public boolean isOwner() {
-		return owner;
-	}
-
-	public void setOwner(boolean owner) {
-		this.owner = owner;
-	}
-	
-	
 	
 }

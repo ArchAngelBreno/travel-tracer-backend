@@ -2,8 +2,6 @@ package com.traveltracer.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -32,6 +30,7 @@ public class Group {
 
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private List<ActivitySpend> activitySpends;
+
 
 	public Long getId() {
 		return id;
@@ -68,45 +67,47 @@ public class Group {
 		this.activitySpends = activitySpends;
 	}
 
-	public void addActivitySpend(CreateActivitySpendRequest createActivitySpendRequest, List<User> usersPayers, List<User> usersReceivers) {
+	public void addActivitySpend(CreateActivitySpendRequest createActivitySpendRequest, List<User> usersPayers, List<User> usersDebtors) {
 		if (activitySpends == null) {
 			activitySpends = new ArrayList<>();
 		}
 
 		ActivitySpend activitySpend = new ActivitySpend();
 		activitySpend.setGroup(this);
-		activitySpend.setNome(createActivitySpendRequest.getName());
+		activitySpend.setName(createActivitySpendRequest.getName());
 		activitySpend.setPrice(createActivitySpendRequest.getPrice());
+		activitySpend.setPayments(new ArrayList<>());
 		
-		Payment payment = new Payment();
+		double totalValue = activitySpend.getPrice() / userGroups.size();
+		
 		
 		usersPayers.forEach(userPayer -> {
-			payment.setUserPayer(userPayer);
-			payment.setStatus(PaymentStatus.PAGO);
+			Payment paymentPayers = new Payment();
+			paymentPayers.setUserPayer(userPayer);
+			paymentPayers.setStatus(PaymentStatus.PAGO);
+			paymentPayers.setTotalValue(activitySpend.getPrice() / usersPayers.size());
+			paymentPayers.setActivitySpend(activitySpend);
+			
+			
+			activitySpend.getPayments().add(paymentPayers);
+			
+			usersDebtors.forEach(userDebtor -> {
+				Payment paymentDebtor = new Payment();
+				paymentDebtor.setUserPayer(userDebtor);
+				paymentDebtor.setUserReceiver(userPayer);
+				paymentDebtor.setStatus(PaymentStatus.NAO_PAGO);
+				paymentDebtor.setTotalValue(totalValue / usersPayers.size());
+				paymentDebtor.setActivitySpend(activitySpend);
+				
+				activitySpend.getPayments().add(paymentDebtor);
+			});
 		});
 		
-		usersReceivers.forEach(userReceiver -> {
-			payment.setUserReceiver(userReceiver);
-			payment.setStatus(PaymentStatus.NAO_PAGO);
-		});
 		
-		
-		List<User> spendUsers = Stream.concat(usersPayers.stream(), usersReceivers.stream()).collect(Collectors.toList());
-		
-		double totalValue = activitySpend.getPrice() / spendUsers.size();
-		
-		payment.setTotalValue(totalValue);
-		payment.setActivitySpend(activitySpend);
-		
-		if (activitySpend.getPayments() == null) {
-			activitySpend.setPayments(new ArrayList<>());
-		}
-		
-		activitySpend.getPayments().add(payment);
-
 		activitySpends.add(activitySpend);
 	}
 
+	
 	public void addUser(User userFromService, boolean owner) {
 		if (userGroups == null) {
 			userGroups = new ArrayList<UserGroup>();
@@ -121,5 +122,9 @@ public class Group {
 		userGroups.add(userGroup);
 	}
 
+	public double totalUserSpendInTrip(Long userId) {
+		return activitySpends.parallelStream().mapToDouble(activitySpend -> activitySpend.getPaymentPaid(userId).parallelStream().mapToDouble(payment -> payment.getTotalValue()).sum()).sum();
+		
+	}
 
 }

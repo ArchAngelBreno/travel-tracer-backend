@@ -1,10 +1,8 @@
 package com.traveltracer.controller.dto;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.traveltracer.model.Group;
 import com.traveltracer.model.User;
 
 public class UserResponse {
@@ -12,23 +10,17 @@ public class UserResponse {
 	private Long id;
 	private String name;
 	
-	private List<Group> groups;
+	private List<GroupResponse> groups;
 	
-	
-	public UserResponse(Optional<User> user) {
-		super();
-		this.id = user.get().getId();
-		this.name = user.get().getName();
-		this.groups = user.get().getUserGroups().stream().map(userGroup -> userGroup.getGroup()).collect(Collectors.toList());
-	}
 	
 	public UserResponse(User user) {
 		super();
 		this.id = user.getId();
 		this.name = user.getName();
-		this.groups = user.getUserGroups().stream().map(userGroup -> userGroup.getGroup()).collect(Collectors.toList());
+		this.groups = user.getUserGroups().parallelStream().map(userGroup-> new GroupResponse(userGroup.getGroup(),id)).collect(Collectors.toList());
+		
 	}
-
+	
 	public UserResponse() {
 		super();
 	}
@@ -53,17 +45,12 @@ public class UserResponse {
 		this.name = name;
 	}
 
-
-	public List<Group> getGroups() {
+	public List<GroupResponse> getGroups() {
 		return groups;
 	}
 
-
-	public void setGroups(List<Group> groups) {
+	public void setGroups(List<GroupResponse> groups) {
 		this.groups = groups;
 	}
-	
-	
-	
 	
 }

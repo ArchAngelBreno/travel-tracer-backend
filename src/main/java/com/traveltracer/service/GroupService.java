@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.traveltracer.controller.dto.CreateGroupRequest;
 import com.traveltracer.controller.dto.GroupResponse;
-import com.traveltracer.controller.dto.UpdateGroupRequest;
 import com.traveltracer.model.Group;
 import com.traveltracer.model.User;
 import com.traveltracer.repository.GroupRepository;
@@ -28,17 +27,17 @@ public class GroupService {
 		Optional<User> user = userRepository.findById(createGroupRequest.getUserId());
 		
 		if (!user.isEmpty()) {
-			user.get().addGroup(createGroupRequest.getGroup(), createGroupRequest.isOwner());
+			user.get().addGroup(createGroupRequest.getGroup(), true);
 			userRepository.save(user.get());
 		} else {
 			throw new UnprocessableEntityException("Não foi possivel adicionar o usuario no grupo");
 		}
 	}
 
-	public void updateGroup(UpdateGroupRequest updateUserRequest, Long groupId) {
+	public void updateGroup(Long groupId, Long userId) {
 		Group group = groupRepository.findById(groupId).get();
-		group.addUser(updateUserRequest.getUser(), updateUserRequest.isOwner());
-		userRepository.save(updateUserRequest.getUser());
+		User user = userRepository.findById(userId).get();
+		group.addUser(user, false);
 		groupRepository.save(group);
 	}
 
@@ -46,7 +45,7 @@ public class GroupService {
 		Optional<Group> group = groupRepository.findById(id);
 
 		if (!group.isEmpty()) {
-			return new GroupResponse(group);
+			return new GroupResponse(group.get());
 		}
 
 		throw new ObjectNotFoundException("O id: " + id + " não existe!");

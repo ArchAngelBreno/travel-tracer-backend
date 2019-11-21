@@ -1,6 +1,8 @@
 package com.traveltracer.model;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -13,14 +15,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.traveltracer.model.enumerator.PaymentStatus;
 
 @Entity
 public class ActivitySpend {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
-	private String nome;
+	private Long id;
+	private String name;
 	private double price;
 	
 	@JsonIgnore
@@ -35,17 +38,17 @@ public class ActivitySpend {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public long getId() {
+	public Long getId() {
 		return id;
 	}
-	public void setId(long id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
-	public String getNome() {
-		return nome;
+	public String getName() {
+		return name;
 	}
-	public void setNome(String nome) {
-		this.nome = nome;
+	public void setName(String name) {
+		this.name = name;
 	}
 	public double getPrice() {
 		return price;
@@ -70,8 +73,31 @@ public class ActivitySpend {
 		this.payments = payments;
 	}
 	
+	public List<Payment> getPaymentToReceive(Long userId) {
+		List<Payment> payments = new ArrayList<>();
+		payments.addAll(getPayments().parallelStream()
+				.filter(payment -> payment.getActivitySpend().getId().equals(getId()) && payment.getUserReceiver() != null && payment.getUserReceiver().getId().equals(userId)
+						&& payment.getStatus().equals(PaymentStatus.NAO_PAGO))
+				.collect(Collectors.toList()));
+
+		return payments;
+	}
 	
-	
+	public List<Payment> getPaymentPaid(Long userId) {
+		List<Payment> payments = new ArrayList<>();
+		payments.addAll(getPayments().parallelStream().filter(payment -> payment.getActivitySpend().getId().equals(getId()) && payment.getUserPayer().getId().equals(userId)
+				&& payment.getStatus().equals(PaymentStatus.PAGO)).collect(Collectors.toList()));
+		
+		return payments;
+	}
+
+	public List<Payment> getPaymentOwing(Long userId) {
+		List<Payment> payments = new ArrayList<>();
+		payments.addAll(getPayments().parallelStream().filter(payment -> payment.getActivitySpend().getId().equals(getId()) && payment.getUserPayer().getId().equals(userId)
+				&& payment.getStatus().equals(PaymentStatus.NAO_PAGO)).collect(Collectors.toList()));
+
+		return payments;
+	}
 	
 	
 }

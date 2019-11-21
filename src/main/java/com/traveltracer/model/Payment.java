@@ -22,11 +22,11 @@ public class Payment {
 	
 	private Integer status;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="user_payer_id")
 	private User userPayer;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="user_receiver_id")
 	private User userReceiver;
 	

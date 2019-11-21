@@ -34,6 +34,7 @@ public class User {
 	private List<UserGroup> userGroups;
 	
 	@OneToMany(cascade=CascadeType.ALL,fetch=FetchType.LAZY)
+	@JsonIgnore
 	private List<Payment> payments;
 
 	public User() {
@@ -79,8 +80,14 @@ public class User {
 		this.userGroups = userGroups;
 	}
 
-	
-	
+	public List<Payment> getPayments() {
+		return payments;
+	}
+
+	public void setPayments(List<Payment> payments) {
+		this.payments = payments;
+	}
+
 	public void addGroup(Group group, boolean isOwner) {
 		if (userGroups == null) {
 			userGroups = new ArrayList<>();
